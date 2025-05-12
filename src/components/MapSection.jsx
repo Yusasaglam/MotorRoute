@@ -1,53 +1,37 @@
-import { useEffect, useState } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
-import L from "leaflet";
+import React, { useEffect, useState } from 'react';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';  // Leaflet CSS importu
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
-// Kurye simgesi (basit turuncu simge)
-const courierIcon = new L.Icon({
-    iconUrl: "https://cdn-icons-png.flaticon.com/512/149/149059.png",
-    iconSize: [32, 32],
+// Marker ikonlarını tanımla
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl: markerIcon2x,
+    iconUrl: markerIcon,
+    shadowUrl: markerShadow,
 });
 
 const MapSection = () => {
-    const [position, setPosition] = useState([41.6344, 32.3379]); // Bartın konumu
-    const [courierCalled, setCourierCalled] = useState(false);
+    const [position, setPosition] = useState([41.6344, 32.3379]);  // Bartın Merkez Örnek Konum
 
     useEffect(() => {
-        navigator.geolocation.getCurrentPosition((pos) => {
-            const { latitude, longitude } = pos.coords;
-            setPosition([latitude, longitude]);
-        });
-    }, []);
+        const map = L.map('map').setView(position, 13);
 
-    const handleCourierCall = () => {
-        setCourierCalled(true);
-    };
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+        }).addTo(map);
+
+        L.marker(position).addTo(map)
+            .bindPopup('Buradasınız!')
+            .openPopup();
+    }, [position]);
 
     return (
-        <div style={{ height: "400px", marginTop: "20px" }}>
-            <MapContainer center={position} zoom={13} style={{ height: "100%", width: "100%" }}>
-                <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    attribution="&copy; OpenStreetMap katkıda bulunanlar"
-                />
-
-
-                {/* Kullanıcının konumu */}
-                <Marker position={position}>
-                    <Popup>Senin konumun</Popup>
-                </Marker>
-
-                {/* Kurye gösterimi */}
-                {courierCalled && (
-                    <Marker position={[position[0] + 0.002, position[1] + 0.002]} icon={courierIcon}>
-                        <Popup>Kurye geliyor!</Popup>
-                    </Marker>
-                )}
-            </MapContainer>
-
-            <button onClick={handleCourierCall} style={{ marginTop: "10px" }}>
-                Kurye Çağır
-            </button>
+        <div>
+            <h2>Harita</h2>
+            <div id="map" style={{ height: '400px' }}></div>
         </div>
     );
 };
