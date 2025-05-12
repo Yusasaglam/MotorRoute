@@ -14,40 +14,30 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapSection = () => {
-    // Başlangıç konumu (Bartın Merkez örneği)
-    const [position, setPosition] = useState([41.6344, 32.3379]);
+    const [position, setPosition] = useState([41.6344, 32.3379]);  // Bartın Merkez Örnek Konum
 
     useEffect(() => {
-        const map = L.map('map').setView(position, 13); // Başlangıçta haritayı konumla aç
+        const map = L.map('map').setView(position, 13);
 
-        // Harita görsellerini yükle
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
 
-        // Marker ekle
-        const marker = L.marker(position).addTo(map)
+        L.marker(position).addTo(map)
             .bindPopup('Buradasınız!')
             .openPopup();
-
-        // Eğer konum değişirse marker'ı güncelle
-        map.on('moveend', () => {
-            const newPosition = map.getCenter(); // Yeni konum bilgisi
-            setPosition([newPosition.lat, newPosition.lng]); // State güncelle
-        });
-
-        return () => {
-            map.remove(); // Component unmount olunca haritayı kaldır
-        };
-    }, [position]); // 'position' değiştiğinde haritayı yeniden render et
+    }, [position]);
 
     return (
         <div>
             <h2>Harita</h2>
             <div id="map" style={{ height: '400px' }}></div>
-            <p>Konum: {position[0]}, {position[1]}</p>
+            <button onClick={() => alert("Kurye çağrıldı!")} style={{ marginTop: "10px" }}>
+                Kurye Çağır
+            </button>
         </div>
     );
+
 };
 
 export default MapSection;
