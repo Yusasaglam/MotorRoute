@@ -14,24 +14,38 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapSection = () => {
-    const [position, setPosition] = useState([41.6344, 32.3379]);  // Bartın Merkez Örnek Konum
+    // Başlangıç konumu (Bartın Merkez örneği)
+    const [position, setPosition] = useState([41.6344, 32.3379]);
 
     useEffect(() => {
-        const map = L.map('map').setView(position, 13);
+        const map = L.map('map').setView(position, 13); // Başlangıçta haritayı konumla aç
 
+        // Harita görsellerini yükle
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors',
         }).addTo(map);
 
-        L.marker(position).addTo(map)
+        // Marker ekle
+        const marker = L.marker(position).addTo(map)
             .bindPopup('Buradasınız!')
             .openPopup();
-    }, [position]);
+
+        // Eğer konum değişirse marker'ı güncelle
+        map.on('moveend', () => {
+            const newPosition = map.getCenter(); // Yeni konum bilgisi
+            setPosition([newPosition.lat, newPosition.lng]); // State güncelle
+        });
+
+        return () => {
+            map.remove(); // Component unmount olunca haritayı kaldır
+        };
+    }, [position]); // 'position' değiştiğinde haritayı yeniden render et
 
     return (
         <div>
             <h2>Harita</h2>
             <div id="map" style={{ height: '400px' }}></div>
+            <p>Konum: {position[0]}, {position[1]}</p>
         </div>
     );
 };
