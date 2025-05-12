@@ -14,22 +14,22 @@ L.Icon.Default.mergeOptions({
 });
 
 const MapSection = () => {
-    // Konum başlangıçta boş (null) olacak
     const [position, setPosition] = useState(null);
     const [courierCalled, setCourierCalled] = useState(false);
+    const [mapInstance, setMapInstance] = useState(null); // Harita instance'ı için state
+    const [courierMarker, setCourierMarker] = useState(null); // Kurye marker'ı için state
 
-    // Konum almayı dene
+    // Konum alma işlemi
     useEffect(() => {
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
                     const { latitude, longitude } = pos.coords;
-                    setPosition([latitude, longitude]); // Konum alındı
+                    setPosition([latitude, longitude]);
                 },
                 (err) => {
                     console.error('Konum alınamadı:', err.message);
-                    // Hata durumunda fallback konum (Bartın)
-                    setPosition([41.6344, 32.3379]);
+                    setPosition([41.6344, 32.3379]); // Fallback konum
                 }
             );
         } else {
@@ -37,45 +37,61 @@ const MapSection = () => {
         }
     }, []);
 
-    // Harita oluşturma ve marker ekleme
+    // Harita ve marker ekleme işlemi
     useEffect(() => {
-        if (position) {
+        if (position && !mapInstance) {
             const map = L.map('map').setView(position, 13);
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
             }).addTo(map);
 
-            // Kullanıcı konumu marker'ı
+            // Kullanıcı marker'ı
             L.marker(position).addTo(map)
                 .bindPopup('Buradasınız!')
                 .openPopup();
 
-            // Kurye çağrıldığında marker ekleyelim
+            setMapInstance(map); // Harita instance'ını state'e kaydet
+
+            // Kurye çağrılınca marker ekle
             if (courierCalled) {
-                // Kurye marker'ı ekle (şu an biraz kaydırılmış)
-                L.marker([position[0] + 0.002, position[1] + 0.002], {
+                const courier = L.marker([position[0] + 0.002, position[1] + 0.002], {
                     icon: L.icon({
                         iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149059.png',
                         iconSize: [32, 32],
-                    })
+                    }),
                 }).addTo(map)
                     .bindPopup('Kurye geliyor!')
                     .openPopup();
+                setCourierMarker(courier); // Kurye marker'ını state'e kaydet
             }
         }
-    }, [position, courierCalled]);
 
-    // Kurye çağırma butonu
+        // Harita ve kurye marker'ı güncelleme işlemi
+        if (courierCalled && mapInstance && courierMarker) {
+            // Eğer kurye çağrıldıysa, eski marker'ı kaldır
+            courierMarker.remove();
+            // Yeni marker'ı ekle
+            const newCourierMarker = L.marker([position[0] + 0.002, position[1] + 0.002], {
+                icon: L.icon({
+                    iconUrl: 'https://cdn-icons-png.flaticon.com/512/149/149059.png',
+                    iconSize: [32, 32],
+                }),
+            }).addTo(mapInstance)
+                .bindPopup('Kurye geliyor!')
+                .openPopup();
+            setCourierMarker(newCourierMarker); // Yeni marker'ı state'e kaydet
+        }
+    }, [position, courierCalled, mapInstance]); // Bu değişkenler değiştiğinde yeniden çalışacak
+
     const handleCourierCall = () => {
-        setCourierCalled(true); // Kurye çağırıldı, marker eklenecek
+        setCourierCalled(true); // Kurye çağrıldı, marker eklenecek
     };
 
     return (
         <div>
             <h2>Harita</h2>
 
-            {/* Konum alınana kadar bekle */}
             {!position ? (
                 <p>Konum alınıyor...</p>
             ) : (
